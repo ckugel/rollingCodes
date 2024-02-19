@@ -14,7 +14,7 @@ const IS_SERVER: bool = true;
 
 fn main() {
     if IS_SERVER {
-        run_server()
+        run_server();
     }
     else {
         run_client();
@@ -23,32 +23,26 @@ fn main() {
 }
 
 fn run_client() {
-    // let mut user_input: String = String::new();
 
-    // println!("please enter your name: ");
-    // match stdin().read_line(&mut user_input) {
-    //     Ok(_num_bytes) => {
-    //         println!("We have successfully read: {}", &user_input);
-    //     }
-    //     Err(_error) => {
-    //         user_input = String::from("TstCse failed");
-    //         println!("Input was misread");
-    //     }
-    // }
+    let mut message: Vec<u8> = Vec::new();
 
+    message.push(3);
+    message.push(7);
+    message.push(3);
+    message.push(7);
+
+    connect_to_client_and_send_message(message);
+    
+}
+
+fn connect_to_client_and_send_message(mut message: Vec<u8>) {
     let stream_result = TcpStream::connect(SocketAddrV4::new(ADDR, PORT));
 
     match stream_result {
      Ok (mut stream) => {
         println!("Connected to the server on {:?}", stream.peer_addr().unwrap());
-        let mut message: Vec<u8> = Vec::new();
-        message.push(3);
-        message.push(7);
-        message.push(3);
-        message.push(7);
         
-        
-        match /*stream.write(&user_input.into_bytes()) */ stream.write(&message) {
+        match stream.write(&message) {
                     Ok(_) => {print!("SENT!");}
                     Err(_) => {
                         println!("user input had an invalid value");
@@ -60,7 +54,7 @@ fn run_client() {
             println!("Couldn't connect to server...");
         }
     }
-    
+
 }
 
 fn run_server() {
