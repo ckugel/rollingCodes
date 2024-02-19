@@ -7,8 +7,8 @@ use crate::server::Server;
 use crate::client::Client;
 
 
-const ADDR: Ipv4Addr = Ipv4Addr::new(192, 168, 0, 116);
-const PORT: u16 = 8001;
+const ADDR: Ipv4Addr = Ipv4Addr::new(127, 0, 0, 9);
+const PORT: u16 = 8008;
 
 const IS_SERVER: bool = true;
 
@@ -41,7 +41,6 @@ fn run_client() {
     match stream_result {
      Ok (mut stream) => {
         println!("Connected to the server on {:?}", stream.peer_addr().unwrap());
-
         let mut message: Vec<u8> = Vec::new();
         message.push(3);
         message.push(7);
@@ -55,7 +54,6 @@ fn run_client() {
                         println!("user input had an invalid value");
                     }
                 }
-                //stream.read(&mut [0; 128])?;
         }
         
         Err(_e) => {
@@ -79,22 +77,42 @@ fn run_server() {
                                 
                                 // handle server logic here
                                 let mut data = [0 as u8;8];
-                                
-                                while match stream.read(&mut data) {
+                                match stream.read(&mut data) {
                                     Ok(size) => {
+                                        if size != 0 {
                                         match stream.write(&data[0..size]) {
-                                            Ok(amnt_read) => {println!("Read: {} bytes", amnt_read);}
+                                            Ok(_amnt_read) => {
+                                                println!("State of buffer: {:?}", &data);
+                                            }
                                             Err(error) => {
                                                 println!("failed to recieve message due to: {}", error);
+                                                data = [0 as u8; 8];
                                             }
                                         }
-                                        true
+                                        }
                                     }
                                     Err(error) => {
                                         println!("failed to read stream into data because of: {}", error);
-                                        false
+                                        match stream.shutdown(Shutdown::Both) {
+                                            Ok(()) => {
+                                                println!("Shutting down server and client");
+                                            }
+                                            Err(error_sd) => {
+                                                println!("Could not shut down both server and client because of: {}", error_sd);
+                                                match stream.shutdown(Shutdown::Read) {
+                                                    Ok(()) => {
+                                                        println!("Successfully shutdown the server but client may or may not be active");
+                                                    }
+                                                    Err(error_sd2) => {
+                                                        println!("Could not shut down either anything because of: {} resulting to panicking", error_sd2);
+                                                        panic!("see logs");
+                                                    }
+                                                }
+                                            }
+
+                                        }
                                     }
-                                } {}
+                                }
                             }
                             Err(_e) => {
                                 println!("Connection has been established but not sure who with");
@@ -109,7 +127,7 @@ fn run_server() {
         }
 
         Err(error) => {
-            println!("could not establish a listener on: {:?}, {:?}", PORT, ADDR);
+            println!("could not establish a listener on: {:?}, {:?}", ADDR, PORT);
             panic!("{}", error);
         }
     }
@@ -144,10 +162,4 @@ fn run_server() {
         }
     }
 
-    #[test]
-    fn testConnection() {
-        use std::net::TcpListener;
-        
-
-    }
 
