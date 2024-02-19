@@ -23,18 +23,18 @@ fn main() {
 }
 
 fn run_client() {
-    let mut user_input: String = String::new();
+    // let mut user_input: String = String::new();
 
-    println!("please enter your name: ");
-    match stdin().read_line(&mut user_input) {
-        Ok(_num_bytes) => {
-            println!("We have successfully read: {}", &user_input);
-        }
-        Err(_error) => {
-            user_input = String::from("TstCse failed");
-            println!("Input was misread");
-        }
-    }
+    // println!("please enter your name: ");
+    // match stdin().read_line(&mut user_input) {
+    //     Ok(_num_bytes) => {
+    //         println!("We have successfully read: {}", &user_input);
+    //     }
+    //     Err(_error) => {
+    //         user_input = String::from("TstCse failed");
+    //         println!("Input was misread");
+    //     }
+    // }
 
     let stream_result = TcpStream::connect(SocketAddrV4::new(ADDR, PORT));
 
@@ -42,13 +42,14 @@ fn run_client() {
      Ok (mut stream) => {
         println!("Connected to the server on {:?}", stream.peer_addr().unwrap());
 
-        // let message = args().nth(1).expect("Please provide message!");
-        match user_input.as_str() {
-            "#END#" => stream.shutdown(Shutdown::Both).expect("Shutdown Failed!"),
-            &_ => {panic!("aghhhhhhhh");}
-        }
+        let mut message: Vec<u8> = Vec::new();
+        message.push(3);
+        message.push(7);
+        message.push(3);
+        message.push(7);
         
-        match stream.write(&user_input.into_bytes()) {
+        
+        match /*stream.write(&user_input.into_bytes()) */ stream.write(&message) {
                     Ok(_) => {print!("SENT!");}
                     Err(_) => {
                         println!("user input had an invalid value");
