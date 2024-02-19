@@ -2,7 +2,7 @@ mod client;
 mod server;
 use core::panic;
 use std::net::{TcpListener, Ipv4Addr, SocketAddrV4, TcpStream, Shutdown};
-use std::io::{stdin, Write};
+use std::io::{stdin, Write, Read};
 use crate::server::Server;
 use crate::client::Client;
 
@@ -10,9 +10,16 @@ use crate::client::Client;
 const ADDR: Ipv4Addr = Ipv4Addr::new(192, 168, 0, 116);
 const PORT: u16 = 8001;
 
-fn main() {
+const IS_SERVER: bool = true;
 
-    run_client();
+fn main() {
+    if IS_SERVER {
+        run_server()
+    }
+    else {
+        run_client();
+    }
+    
 }
 
 fn run_client() {
@@ -58,7 +65,54 @@ fn run_client() {
 }
 
 fn run_server() {
-    
+ // don't use multiple threads here as you should only make one transaction at a time anyways
+ // could make a queue of requests if neccessary
+    match TcpListener::bind(SocketAddrV4::new(ADDR, PORT)) {
+        Ok(listener) => {
+            for stream in listener.incoming() {
+                match stream {
+                    Ok(mut stream) => {
+                        match stream.peer_addr() {
+                            Ok(addr) => {
+                                println!("Connection has been established with: {}", addr);
+                                
+                                // handle server logic here
+                                let mut data = [0 as u8;8];
+                                
+                                while match stream.read(&mut data) {
+                                    Ok(size) => {
+                                        match stream.write(&data[0..size]) {
+                                            Ok(amnt_read) => {println!("Read: {} bytes", amnt_read);}
+                                            Err(error) => {
+                                                println!("failed to recieve message due to: {}", error);
+                                            }
+                                        }
+                                        true
+                                    }
+                                    Err(error) => {
+                                        println!("failed to read stream into data because of: {}", error);
+                                        false
+                                    }
+                                } {}
+                            }
+                            Err(_e) => {
+                                println!("Connection has been established but not sure who with");
+                            }
+                        }
+                    }
+                    Err(err) => {
+                        println!("Connection failed due to: {:?}", err);
+                    }
+                }
+            }
+        }
+
+        Err(error) => {
+            println!("could not establish a listener on: {:?}, {:?}", PORT, ADDR);
+            panic!("{}", error);
+        }
+    }
+
 }
 
 #[cfg(test)]
