@@ -1,60 +1,15 @@
-mod client;
 mod server;
 use core::panic;
 use std::net::{TcpListener, Ipv4Addr, SocketAddrV4, TcpStream, Shutdown};
 use std::io::{stdin, Write, Read};
 use crate::server::Server;
-use crate::client::Client;
 
 
 const ADDR: Ipv4Addr = Ipv4Addr::new(127, 0, 0, 9);
 const PORT: u16 = 8008;
 
-const IS_SERVER: bool = true;
-
 fn main() {
-    if IS_SERVER {
-        run_server();
-    }
-    else {
-        run_client();
-    }
-    
-}
-
-fn run_client() {
-
-    let mut message: Vec<u8> = Vec::new();
-
-    message.push(3);
-    message.push(7);
-    message.push(3);
-    message.push(7);
-
-    connect_to_client_and_send_message(message);
-    
-}
-
-fn connect_to_client_and_send_message(mut message: Vec<u8>) {
-    let stream_result = TcpStream::connect(SocketAddrV4::new(ADDR, PORT));
-
-    match stream_result {
-     Ok (mut stream) => {
-        println!("Connected to the server on {:?}", stream.peer_addr().unwrap());
-        
-        match stream.write(&message) {
-                    Ok(_) => {print!("SENT!");}
-                    Err(_) => {
-                        println!("user input had an invalid value");
-                    }
-                }
-        }
-        
-        Err(_e) => {
-            println!("Couldn't connect to server...");
-        }
-    }
-
+    run_server();
 }
 
 fn run_server() {
@@ -127,33 +82,3 @@ fn run_server() {
     }
 
 }
-
-#[cfg(test)]
-     mod tests {
-         #[test]
-         fn simple_unlock() {
-             use crate::client::Client;
-             use crate::server::Server;
-
-             let mut s1: Server = Server::new(1);
-             let mut client: Client = Client::new(1);
-         
-             assert!(s1.check_transmission(client.get_transmission()));
-         }
-        
-        #[test]
-         fn repeated_unheard() {
-            use crate::client::Client;
-            use crate::server::Server;
-
-            let mut s1: Server = Server::new(1);
-            let mut client: Client = Client::new(1);
-            client.get_transmission();
-            client.get_transmission();
-            client.get_transmission();
-            client.get_transmission();
-            assert!(s1.check_transmission(client.get_transmission()));
-        }
-    }
-
-
